@@ -1,0 +1,40 @@
+# Based on https://github.com/armbian/build/blob/v25.2.1/action.yml
+name: "Build Armbian kernels"
+on:
+  workflow_dispatch:
+jobs:
+  build-armbian:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Armbian build framework"
+        uses: actions/checkout@v4
+        with:
+          repository: armbian/build
+          ref: v25.02
+          clean: false
+          path: armbian-build
+      - name: Build Armbian kernel
+        shell: bash
+        run: |
+          cd armbian-build
+          ./compile.sh kernel \
+            REVISION=25.2.3 \
+            BOARD=orangepi5-plus \
+            BRANCH=edge \
+            KERNEL_CONFIGURE=no \
+            SHARE_LOG=yes \
+            SET_OWNER_TO_UID=1000 \
+            EXPERT="yes"
+          ./compile.sh artifact WHAT=uboot\
+            REVISION=25.2.3 \
+            BOARD=orangepi5-plus \
+            BRANCH=edge \
+            SHARE_LOG=yes \
+            SET_OWNER_TO_UID=1000 \
+            EXPERT="yes"
+          ls -laR ./output
+          echo IMAGE FILES
+          dpkg -c ./output/debs/linux-image-edge-*.deb
+          echo UBOOT FILES
+          dpkg -c ./output/debs/linux-u-boot-*.deb
+
